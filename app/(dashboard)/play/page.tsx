@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Lock, Trophy, Zap, Star, X, LogOut } from "lucide-react"
+import ApiStepperPage from "@/app/lesson-api-example/page"
 
 const INITIAL_LEVELS = [
   {
@@ -346,58 +347,19 @@ export default function PlayPage() {
         {/* Level Details Modal */}
         {selectedLevel && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="border border-cyan-500/30 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 backdrop-blur-sm max-w-md w-full">
+            <div className="border border-cyan-500/30 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 backdrop-blur-sm h-[95%] overflow-scroll w-full">
               {(() => {
                 const level = levels.find((l) => l.id === selectedLevel)
                 return (
-                  <>
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <h3 className="text-3xl font-bold text-white mb-1">{level?.icon}</h3>
-                        <h2 className="text-2xl font-bold text-white mb-1">
-                          Level {level?.id}: {level?.title}
-                        </h2>
-                        <p className="text-slate-400">{level?.description}</p>
-                      </div>
-                      <button
-                        onClick={() => setSelectedLevel(null)}
-                        className="text-slate-400 hover:text-white transition-colors p-1"
-                      >
-                        <X className="w-6 h-6" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-cyan-500/5 rounded-lg border border-cyan-500/10">
-                      <div>
-                        <p className="text-sm text-slate-400 mb-1">Difficulty</p>
-                        <p className={`font-semibold ${getDifficultyColor(level?.difficulty || "Easy")}`}>
-                          {level?.difficulty}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-400 mb-1">XP Reward</p>
-                        <p className="text-yellow-400 font-semibold">{level?.xp} XP</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-400 mb-1">Status</p>
-                        <p className={`font-semibold ${level?.completed ? "text-green-400" : "text-cyan-400"}`}>
-                          {level?.completed ? "Completed" : "Ready"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-slate-300 mb-6">
-                      Master {level?.title}. Learn about free alternatives and become a tech expert through interactive
-                      lessons and challenges.
-                    </p>
-
+                  <div  >
+                    <ApiStepperPage/>
                     <button
                       onClick={() => handleCompleteLevel(selectedLevel)}
                       className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:shadow-cyan-500/50"
                     >
                       {level?.completed ? "Completed ✓" : "Complete Level"}
                     </button>
-                  </>
+                  </ div>
                 )
               })()}
             </div>

@@ -36,11 +36,21 @@ export default function LandingPage() {
               About Us
             </Link>
           </div>
-          <Link href="/register">
-            <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-full px-6 shadow-lg shadow-cyan-500/30 transition-all duration-300">
-              Play Now
-            </Button>
-          </Link>
+            <div className="hidden md:flex items-center gap-4">
+              <Link href="/fullscreen-game" className="text-sm text-slate-300 hover:text-cyan-400 transition-colors duration-300">
+                Try Game
+              </Link>
+              <Link href="/register">
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-full px-6 shadow-lg shadow-cyan-500/30 transition-all duration-300">
+                  Play Now
+                </Button>
+              </Link>
+            </div>
+            <Link href="/register" className="md:hidden">
+              <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-full px-4 shadow-lg shadow-cyan-500/30 transition-all duration-300">
+                Play Now
+              </Button>
+            </Link>
         </div>
       </nav>
 
@@ -170,6 +180,62 @@ export default function LandingPage() {
               <CubeNetwork />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section id="demo" className="relative max-w-7xl mx-auto px-6 py-20 border-t border-cyan-500/10">
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute top-20 left-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl opacity-30"></div>
+        </div>
+
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-white mb-4 text-balance">
+            Try Our <span className="text-cyan-400">Interactive Demos</span>
+          </h2>
+          <p className="text-slate-400 text-lg">
+            Experience the platform firsthand with interactive demonstrations.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Full Lesson Demo */}
+          <Link
+            href="/lesson-api-example"
+            className="group relative border border-blue-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/30 hover:from-blue-500/10 hover:to-cyan-500/10 rounded-xl overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-blue-400/60 block p-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5 transition-all duration-300 -z-10"></div>
+            <div className="text-5xl mb-4">📚</div>
+            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+              Complete Lesson
+            </h3>
+            <p className="text-slate-300 mb-4 leading-relaxed">
+              Experience a full 4-step lesson including theory, multiple choice quiz, hands-on lab, and an interactive matching game.
+            </p>
+            <div className="flex items-center gap-2 text-blue-400 group-hover:text-blue-300 transition-colors font-semibold">
+              View Demo
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Fullscreen Game Demo */}
+          <Link
+            href="/fullscreen-game"
+            className="group relative border border-cyan-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/30 hover:from-cyan-500/10 hover:to-blue-500/10 rounded-xl overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-cyan-400/60 block p-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/5 group-hover:to-blue-500/5 transition-all duration-300 -z-10"></div>
+            <div className="text-5xl mb-4">🎮</div>
+            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-cyan-300 transition-colors">
+              Fullscreen 3D Game
+            </h3>
+            <p className="text-slate-300 mb-4 leading-relaxed">
+              Play an immersive 3D matching game in fullscreen mode. Drag and drop software items into their categories using interactive 3D elements.
+            </p>
+            <div className="flex items-center gap-2 text-cyan-400 group-hover:text-cyan-300 transition-colors font-semibold">
+              Play Now
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
         </div>
       </section>
 
