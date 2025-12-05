@@ -1,8 +1,12 @@
 "use client"
 
 import React from "react"
-import { useState } from "react"
-import { Lock, Trophy, Zap, Star, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import { Lock, Trophy, Zap, Star, X, LogOut } from "lucide-react"
 
 const INITIAL_LEVELS = [
   {
@@ -170,21 +174,32 @@ const drawConnections = (canvas: HTMLCanvasElement, completedLevels: number[]) =
 }
 
 export default function PlayPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [completedLevels, setCompletedLevels] = useState<number[]>([])
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
 
+  // All hooks must be called before any conditional returns
   const levels = INITIAL_LEVELS.map((level) => ({
     ...level,
     locked: isLevelLocked(level.id, completedLevels),
     completed: completedLevels.includes(level.id),
   }))
 
+  // Draw connections effect
   React.useEffect(() => {
-    drawConnections(canvasRef.current!, completedLevels)
-    window.addEventListener("resize", () => drawConnections(canvasRef.current!, completedLevels))
-    return () => window.removeEventListener("resize", () => drawConnections(canvasRef.current!, completedLevels))
-  }, [completedLevels])
+    if (canvasRef.current && status === "authenticated") {
+      drawConnections(canvasRef.current, completedLevels)
+      const handleResize = () => {
+        if (canvasRef.current) {
+          drawConnections(canvasRef.current, completedLevels)
+        }
+      }
+      window.addEventListener("resize", handleResize)
+      return () => window.removeEventListener("resize", handleResize)
+    }
+  }, [completedLevels, status])
 
   const handleCompleteLevel = (levelId: number) => {
     if (!completedLevels.includes(levelId)) {
@@ -193,8 +208,57 @@ export default function PlayPage() {
     setSelectedLevel(null)
   }
 
+  // Show loading state while checking authentication
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-blue-950/20 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Middleware ensures we have a session, but check just in case
+  if (!session) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-blue-950/20 to-slate-950 relative overflow-hidden">
+      {/* Header Navigation */}
+      <nav className="sticky top-0 z-40 border-b border-cyan-500/10 bg-gradient-to-b from-slate-950/90 to-slate-950/70 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+              <Image
+                src="/images/education-quest-logo.png"
+                alt="Education Quest Logo"
+                width={40}
+                height={40}
+                className="w-10 h-10 object-cover"
+              />
+            </div>
+            <span className="text-xl font-bold text-white hidden sm:inline">Education Quest</span>
+          </Link>
+          
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-400">Welcome back,</p>
+              <p className="text-white font-semibold">{session.user?.name || session.user?.email}</p>
+            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all duration-300"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(100)].map((_, i) => (
           <div

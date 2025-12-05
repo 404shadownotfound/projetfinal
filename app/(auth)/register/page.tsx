@@ -4,16 +4,20 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { ChevronRight, Trophy, Award, Star, Lock } from "lucide-react"
 import { FloatingSphere } from "@/components/3d/floating-sphere"
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [selectedBadge, setSelectedBadge] = useState<number | null>(null)
+  const [error, setError] = useState("")
 
   const badges = [
     {
@@ -66,14 +70,61 @@ export default function RegisterPage() {
     },
   ]
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    
     if (password !== confirmPassword) {
-      alert("Passwords do not match")
+      setError("Passwords do not match")
       return
     }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+
     setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 1000)
+
+    try {
+      // Register user
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          confirmPassword,
+          selectedBadge,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to register")
+      }
+
+      // Auto-login after registration
+      const signInResult = await signIn("credentials", {
+        email,
+        password,
+        callbackUrl: "/play",
+      })
+
+      if (signInResult?.error) {
+        throw new Error("Registration successful but login failed. Please login manually.")
+      }
+      // If successful, NextAuth will automatically redirect to /play
+      // Middleware will also prevent accessing register page if authenticated
+    } catch (error) {
+      console.error("Registration error:", error)
+      setError(error instanceof Error ? error.message : "Failed to register")
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -110,6 +161,13 @@ export default function RegisterPage() {
               {/* Register Form */}
               <div className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Error Message */}
+                  {error && (
+                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
+
                   {/* Username Input */}
                   <div className="space-y-2">
                     <label htmlFor="username" className="block text-sm font-medium text-white">
