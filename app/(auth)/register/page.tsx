@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
@@ -18,114 +18,145 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedBadge, setSelectedBadge] = useState<number | null>(null)
   const [error, setError] = useState("")
+const [companies, setCompanies] = useState<Team[]>([]);
+  const [company, setCompany] = useState("");
+type Team = {
+  _id: string;
+  name: string;
+  score?: number;
+};
+
+   useEffect(() => {
+    async function loadCompanies() {
+      const res = await fetch("/api/teams");
+      const data = await res.json();
+
+      if (data.success) {
+        // Store full objects ⬇️
+        setCompanies(data.data);
+      }
+    }
+    loadCompanies();
+  }, []);
 
   const badges = [
     {
       id: 1,
-      name: "Founder",
-      description: "Early adopter of TechQuest",
+      name: "Admin",
+      description: "Administrateur",
       icon: Trophy,
       color: "from-yellow-500 to-orange-500",
       unlocked: true,
     },
     {
       id: 2,
-      name: "Tech Learner",
-      description: "Complete 5 tech lessons",
+      name: "Student",
+      description: "Student",
       icon: Award,
       color: "from-blue-500 to-cyan-500",
       unlocked: true,
     },
     {
       id: 3,
-      name: "First Victory",
-      description: "Win your first challenge",
+      name: "Teacher",
+      description: "Teacher",
       icon: Star,
       color: "from-purple-500 to-pink-500",
-      unlocked: false,
+      unlocked: true,
     },
     {
       id: 4,
-      name: "Leaderboard Hero",
-      description: "Reach top 100 globally",
+      name: "Technical Support",
+      description: "Technical Support",
       icon: Trophy,
       color: "from-red-500 to-pink-500",
-      unlocked: false,
-    },
-    {
-      id: 5,
-      name: "Master Coder",
-      description: "Complete all advanced lessons",
-      icon: Award,
-      color: "from-green-500 to-emerald-500",
-      unlocked: false,
-    },
-    {
-      id: 6,
-      name: "Community Star",
-      description: "Help 10 users in community",
-      icon: Star,
-      color: "from-indigo-500 to-blue-500",
-      unlocked: false,
-    },
-  ]
+      unlocked: true,
+    }
+  ];
 
+  // 🔥 Submit
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    
+    e.preventDefault();
+    setError("");
+
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
+      setError("Passwords do not match");
+      return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return
+      setError("Password must be at least 6 characters");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // Register user
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-          confirmPassword,
-          selectedBadge,
-        }),
-      })
+      // 1️⃣ Check if team exists (by name)
+      const existingTeam = companies.find((t: any) => t.name === company);
 
-      const data = await response.json()
+      let teamId = existingTeam?._id; // if exists set ID
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to register")
+      // 2️⃣ If not exists → create new team
+      if (!existingTeam) {
+        const createRes = await fetch("/api/teams", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: company,
+            company: company,
+          }),
+        });
+
+        const created = await createRes.json();
+
+        if (!created.success) {
+          throw new Error("Failed to create team");
+        }
+
+        // Use returned Mongo ID
+        teamId = created.data._id;
       }
 
-      // Auto-login after registration
+      // ❗ teamId is NOW a valid ObjectId string, never a number
+
+      // 3️⃣ Register User
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({
+    username,
+    email,
+    password,
+    confirmPassword,
+    team: teamId, // this must be _id string from MongoDB
+  })
+
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to register");
+      }
+
+      // 4️⃣ Auto login
       const signInResult = await signIn("credentials", {
         email,
         password,
         callbackUrl: "/play",
-      })
+      });
 
       if (signInResult?.error) {
-        throw new Error("Registration successful but login failed. Please login manually.")
+        throw new Error("Registration successful but login failed.");
       }
-      // If successful, NextAuth will automatically redirect to /play
-      // Middleware will also prevent accessing register page if authenticated
     } catch (error) {
-      console.error("Registration error:", error)
-      setError(error instanceof Error ? error.message : "Failed to register")
-      setIsLoading(false)
+      console.error("Registration error:", error);
+      setError(error instanceof Error ? error.message : "Failed to register");
+      setIsLoading(false);
     }
-  }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex flex-col">
@@ -231,7 +262,85 @@ export default function RegisterPage() {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+    <label htmlFor="company" className="block text-sm font-medium text-white">
+      Company
+    </label>
 
+    <input
+        list="companies"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+        placeholder="Enter or select company"
+        className="input"
+      />
+
+      <datalist id="companies">
+        {companies.map((c: any) => (
+          <option key={c._id} value={c.name} />
+        ))}
+      </datalist>
+  </div>
+{/* Badges Section */}
+          <div >
+            <div >
+              <h2 className="text-4xl font-bold text-white mb-4 text-balance">
+                choose  <span className="text-cyan-400">your role</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {badges.map((badge) => {
+                const IconComponent = badge.icon
+                return (
+                  <button
+  key={badge.id}
+  onClick={() => setSelectedBadge(badge.id)} // ONLY ONE CAN BE SELECTED
+  className="group relative"
+>
+  <div
+    className={`relative h-32 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center p-4 cursor-pointer
+      ${selectedBadge === badge.id
+        ? "border-cyan-400 bg-cyan-500/20 shadow-lg shadow-cyan-400/40 scale-105"
+        : badge.unlocked
+          ? "border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/30"
+          : "border-slate-700/50 bg-slate-900/30 hover:border-slate-600"
+      }`}
+  >
+    {!badge.unlocked && <Lock className="absolute top-2 right-2 w-4 h-4 text-slate-500" />}
+
+    <div
+      className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
+        badge.unlocked ? `bg-gradient-to-br ${badge.color}` : "bg-slate-700"
+      }`}
+    >
+      <IconComponent className={`w-6 h-6 ${badge.unlocked ? "text-white" : "text-slate-600"}`} />
+    </div>
+
+    <h3
+      className={`text-xs font-semibold text-center ${
+        badge.unlocked ? "text-white" : "text-slate-500"
+      }`}
+    >
+      {badge.name}
+    </h3>
+  </div>
+
+  {selectedBadge === badge.id && (
+    <div className="absolute -top-20 left-1/2 -translate-x-1/2 z-10 bg-slate-800 border border-cyan-500/50 rounded-lg p-3 w-48 shadow-xl">
+      <p className="text-sm text-white font-semibold mb-1">{badge.name}</p>
+      <p className="text-xs text-slate-300">{badge.description}</p>
+      {!badge.unlocked && (
+        <p className="text-xs text-cyan-400 mt-2">Complete the requirements to unlock</p>
+      )}
+    </div>
+  )}
+</button>
+
+                )
+              })}
+            </div>
+          </div>
                   {/* Terms & Conditions */}
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" className="w-4 h-4 accent-cyan-500 mt-1" required />
@@ -294,63 +403,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Badges Section */}
-          <div className="mt-20 border-t border-cyan-500/10 pt-20">
-            <div className="mb-12">
-              <h2 className="text-4xl font-bold text-white mb-4 text-balance">
-                Unlock <span className="text-cyan-400">Exclusive Badges</span>
-              </h2>
-              <p className="text-slate-400 text-lg">Earn achievements as you learn and climb the leaderboard</p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {badges.map((badge) => {
-                const IconComponent = badge.icon
-                return (
-                  <button
-                    key={badge.id}
-                    onClick={() => setSelectedBadge(selectedBadge === badge.id ? null : badge.id)}
-                    className="group relative"
-                  >
-                    <div
-                      className={`relative h-32 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center p-4 cursor-pointer ${
-                        badge.unlocked
-                          ? `border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/30`
-                          : "border-slate-700/50 bg-slate-900/30 hover:border-slate-600"
-                      }`}
-                    >
-                      {!badge.unlocked && <Lock className="absolute top-2 right-2 w-4 h-4 text-slate-500" />}
-
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
-                          badge.unlocked ? `bg-gradient-to-br ${badge.color}` : "bg-slate-700"
-                        }`}
-                      >
-                        <IconComponent className={`w-6 h-6 ${badge.unlocked ? "text-white" : "text-slate-600"}`} />
-                      </div>
-
-                      <h3
-                        className={`text-xs font-semibold text-center ${badge.unlocked ? "text-white" : "text-slate-500"}`}
-                      >
-                        {badge.name}
-                      </h3>
-                    </div>
-
-                    {/* Tooltip */}
-                    {selectedBadge === badge.id && (
-                      <div className="absolute -top-20 left-1/2 -translate-x-1/2 z-10 bg-slate-800 border border-cyan-500/50 rounded-lg p-3 w-48 shadow-xl">
-                        <p className="text-sm text-white font-semibold mb-1">{badge.name}</p>
-                        <p className="text-xs text-slate-300">{badge.description}</p>
-                        {!badge.unlocked && (
-                          <p className="text-xs text-cyan-400 mt-2">Complete the requirements to unlock</p>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>

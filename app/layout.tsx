@@ -9,22 +9,15 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Education Quest - Learn Free Tech Alternatives",
+  title: "Education Quest",
   description:
     "Master modern tech solutions that replace expensive Windows software. Play, learn, and compete with users worldwide—all completely free.",
-  generator: "v0.app",
+  generator: "EQ.app",
   icons: {
     icon: [
+      
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
+        url: "/images/education-quest-logo.png",
         type: "image/svg+xml",
       },
     ],

@@ -85,7 +85,8 @@ export default function LandingPage() {
 
           {/* Right Column - 3D Animation */}
           <div className="relative h-96 lg:h-full min-h-96">
-            <div className="absolute inset-0 rounded-2xl overflow-hidden border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 backdrop-blur-sm">
+            {/* Right 3D Animation */}
+            <div className="hidden lg:flex h-full min-h-[500px] rounded-2xl overflow-hidden backdrop-blur-sm bg-gradient-to-br from-cyan-900/20 via-blue-900/5 to-slate-950/20 shadow-2xl shadow-cyan-500/20">
               <ChainAnimation />
             </div>
           </div>
@@ -165,7 +166,7 @@ export default function LandingPage() {
           </div>
 
           <div className="relative h-96">
-            <div className="absolute inset-0 rounded-xl overflow-hidden border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 backdrop-blur-sm">
+           <div className="hidden lg:flex h-full min-h-[500px] rounded-2xl overflow-hidden backdrop-blur-sm bg-gradient-to-br from-cyan-900/20 via-blue-900/5 to-slate-950/20 shadow-2xl shadow-cyan-500/20">
               <CubeNetwork />
             </div>
           </div>

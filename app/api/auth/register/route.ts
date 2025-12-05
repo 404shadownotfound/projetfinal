@@ -40,7 +40,6 @@ export async function POST(request: Request) {
           id: user.id,
           username: user.username,
           email: user.email,
-          selectedBadge: user.selectedBadge,
         },
       },
       { status: 201 }
