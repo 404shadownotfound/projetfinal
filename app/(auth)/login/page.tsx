@@ -4,17 +4,40 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { RoboticHead } from "@/components/3d/robotic-head"
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 1000)
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        callbackUrl: "/play",
+      })
+
+      if (result?.error) {
+        setError(result.error)
+        setIsLoading(false)
+      }
+      // If successful, NextAuth will automatically redirect to callbackUrl (/play)
+      // Middleware will also prevent accessing login page if authenticated
+    } catch (error) {
+      console.error("Login error:", error)
+      setError("An unexpected error occurred")
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -59,6 +82,13 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Error Message */}
+                  {error && (
+                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
+
                   {/* Email Input */}
                   <div className="space-y-2">
                     <label htmlFor="email" className="block text-sm font-medium text-white">
